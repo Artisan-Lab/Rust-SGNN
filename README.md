@@ -1,4 +1,4 @@
-#Safe Rust Code Recommendation Based on Siamese Graph Neural Network
+# Safe Rust Code Recommendation Based on Siamese Graph Neural Network
 
 This repo provides an implementation of the SGNN(Siamese Graph Neural Network) for safe Rust Recommendation .
 
