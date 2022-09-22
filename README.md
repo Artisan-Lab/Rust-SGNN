@@ -1,5 +1,4 @@
-#Safe Rust Code Recommendation Based on
-Siamese Graph Neural Network
+#Safe Rust Code Recommendation Based on Siamese Graph Neural Network
 
 This repo provides an implementation of the SGNN(Siamese Graph Neural Network) for safe Rust Recommendation .
 
@@ -13,16 +12,16 @@ pip install -r requirements.txt
 
 ## Model Implementation
 
-The SGNN model is implemented in `model.py`. Bipartite Graph Match is implemented  in baseline.py. Gemini is implemented  in Gemini.py.
+The SGNN model is implemented in `SGNN.py`.
 
 Run the following code to train the model:
 
 ```
-python model.py
+python train.py
 ```
 
 After training, run the following code to evaluate the model:
 
 ```
-python consume_time.py
+python eval.py
 ```
