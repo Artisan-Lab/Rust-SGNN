@@ -2535,4 +2535,792 @@ fn main(){
 ```
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
+  
+  
+  
+  
 
+
+## mem_zeroed
+
+mem::zeroed() 初始化
+
+保留字：mem\zeroed\struct\ptr
+
+- 初始化变量
+- 初始化结构体
+- 初始化指针
+
+unsafe 1
+```
+#![allow(unused)]
+fn main() {
+    use std::mem;
+
+    let x: i32 = unsafe { mem::zeroed() };
+    assert_eq!(0, x);
+}
+```
+safe 1
+```
+#![allow(unused)]
+fn main() {
+
+    let x: i32 = 0;
+    assert_eq!(0, x);
+}
+```
+
+扩充unsafe 2
+```
+use std::mem;
+
+struct MyStruct {
+    x: i32,
+    y: bool,
+    z: [u8; 16],
+}
+
+fn main() {
+    let mut s: MyStruct = unsafe { mem::zeroed() };
+}
+```
+
+对应safe 2
+```
+struct MyStruct {
+    x: i32,
+    y: bool,
+    z: [u8; 16],
+}
+
+fn main() {
+    let s = MyStruct {
+        x: 0,
+        y: false,
+        z: [0; 16],
+    };
+}
+```
+
+扩充unsafe 3
+```
+use std::mem;
+
+fn main() {
+    let ptr: *mut i32 = unsafe { mem::zeroed() };
+    println!("ptr is {:?}", ptr);
+}
+
+```
+对应safe 3
+```
+fn main() {
+    let ptr: Option<*mut i32> = None;
+    println!("ptr is {:?}", ptr);
+}
+
+```
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+github unsafe 1/2
+```
+let mut value = unsafe { mem::zeroed() } ;//1
+let mut v = unsafe { mem::zeroed() } ; //2
+
+```
+github safe 1/2
+```
+let mut value = mem::zeroed(); //1
+//???
+let mut v = mem::zeroed(); //2
+//???
+
+```
+github unsafe 3
+```
+pub fn start<P: AsRef<Path>>(p: P) -> Result<Heap> {
+    let mut slabs: [MaybeUninit<Slab>; 32] = unsafe { std::mem::zeroed() };
+    // std::mem::zeroed()来初始化数组。这将为每个Slab对象分配内存
+
+    for slab_id in 0..32 {
+        let slab = Slab::start(&p, slab_id)?;
+        slabs[slab_id as usize] = MaybeUninit::new(slab);
+
+    }
+
+    Ok(Heap { slabs: unsafe { transmute(slabs) } })
+
+}
+
+```
+github safe 3
+```
+pub fn start<P: AsRef<Path>>(p: P) -> Result<Heap> {
+
+    let mut slabs = vec![];
+
+    for slab_id in 0..32 {
+        let slab = Slab::start(&p, slab_id)?;
+
+        slabs.push(slab);
+    }
+
+    let slabs: [Slab; 32] = slabs.try_into().unwrap();
+
+    Ok(Heap { slabs })
+}
+```
+github unsafe 4
+```
+#![allow(unused)]
+
+fn main() {
+    let mut raw_status = unsafe { mem::zeroed::<winsvc::SERVICE_STATUS_PROCESS>() };
+
+}
+
+```
+github safe 4
+```
+#![allow(unused)]
+
+fn main() {
+    let mut raw_status = mem::MaybeUninit::<winsvc::SERVICE_STATUS_PROCESS>::zeroed();
+}
+```
+
+## new_unchecked
+
+new_unchecked用于创建某些类型的实例
+new_unchecked() 生成的是 NonNull\<T>
+
+- 通过 NonNull\<T> 和 new_unchecked() 生成指针类型
+  - T的类型 可以进一步进行划分，其中 T 可以是 MaybeUninit\<U> 类型
+  
+
+
+unsafe 1
+  
+```
+#![allow(unused)]
+fn main() {
+    use std::ptr::NonNull;
+
+    let mut x = 0u32;
+    let ptr = unsafe { NonNull::new_unchecked(&mut x as *mut _) };
+}
+```
+safe 1
+```
+#![allow(unused)]
+fn main() {
+    use std::ptr::NonNull;
+
+    let mut x = 0u32;
+
+    let ptr = NonNull::<u32>::new(&mut x as *mut _).expect("ptr is null!");
+} 
+```
+unsafe 2
+```
+#![allow(unused)]
+fn main() {
+    use std::ptr::NonNull;
+
+// NEVER DO THAT!!! This is undefined behavior.
+    let ptr = unsafe { NonNull::<u32>::new_unchecked(std::ptr::null_mut()) };
+}
+```
+safe 2
+```
+#![allow(unused)]
+fn main() {
+    use std::ptr::NonNull;
+
+// NEVER DO THAT!!! This is undefined behavior.
+    let ptr =  NonNull::<u32>::new(std::ptr::null_mut()).expect("ptr is null!");
+}
+```
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+github unsafe 1
+```
+pub fn new<F>(future: F) -> Self
+    where
+        F: Future<Output = T> + Send + 'static,
+    {
+        let boxed: Box<dyn Future<Output = T> + Send> = Box::new(future);
+
+        let boxed = Box::into_raw(boxed);
+
+        // SAFETY: Box::into_raw does not return null pointers.
+        let boxed = unsafe { NonNull::new_unchecked(boxed) };
+        Self { boxed }
+    }
+```
+github safe 1
+```
+pub fn new<F>(future: F) -> Self
+    where
+        F: Future<Output = T> + Send + 'a,
+    {
+        let boxed: Box<dyn Future<Output = T> + Send + 'a> = Box::new(future);
+
+
+        let boxed = NonNull::from(Box::leak(boxed));
+        Self { boxed }
+    }
+   
+```
+
+## slice_unchecked
+slice_unchecked 是一个 unsafe 方法，它的作用是返回一个slice
+slice_unchecked 方法需要手动检查切片的起始和结束位置是否有效
+
+safe方式将 slice_unchecked 方法替换为使用 Rust 的索引语法来完成的。在代码二中，使用 & 操作符对字符串进行切片，使用 \[start..end] 索引从字符串中提取子字符串
+
+unsafe 1
+```
+#![allow(unused)]
+fn main() {
+    let s = "Löwe 老虎 Léopard";
+
+    unsafe {
+        assert_eq!("Löwe 老虎 Léopard", s.slice_unchecked(0, 21));
+    }
+
+    let s = "Hello, world!";
+
+    unsafe {
+        assert_eq!("world", s.slice_unchecked(7, 12));
+    }
+}
+```
+safe 1
+```
+#![allow(unused)]
+
+fn main() {
+    let s = "Löwe 老虎 Léopard";
+
+    assert_eq!("Löwe 老虎 Léopard", &s[0..21]);
+
+    let s = "Hello, world!";
+
+    assert_eq!("world", &s[7..12]);
+}
+```
+
+## split_at_unchecked
+
+split_at_unchecked用于将 slice 分割成两个不重叠的部分，必须保证传入的分割位置是有效的
+
+safe方式为将 split_at_unchecked 方法替换为 split_at 方法
+
+**如果是在循环中反复调用 split_at在这种情况下使用 split_at_unchecked 可以减少一些性能开销**
+
+unsafe 1
+```
+#![allow(unused)]
+#![feature(slice_split_at_unchecked)]
+
+fn main() {
+    let v = [1, 2, 3, 4, 5, 6];
+
+    unsafe {
+        let (left, right) = v.split_at_unchecked(0);
+        assert_eq!(left, []);
+        assert_eq!(right, [1, 2, 3, 4, 5, 6]);
+    }
+
+    unsafe {
+        let (left, right) = v.split_at_unchecked(2);
+        assert_eq!(left, [1, 2]);
+        assert_eq!(right, [3, 4, 5, 6]);
+    }
+
+    unsafe {
+        let (left, right) = v.split_at_unchecked(6);
+        assert_eq!(left, [1, 2, 3, 4, 5, 6]);
+        assert_eq!(right, []);
+    }
+}
+```
+safe 1
+```
+#![allow(unused)]
+
+fn main() {
+    let v = [1, 2, 3, 4, 5, 6];
+
+    let (left, right) = v.split_at(0);
+    assert_eq!(left, []);
+    assert_eq!(right, [1, 2, 3, 4, 5, 6]);
+
+
+    let (left, right) = v.split_at(2);
+    assert_eq!(left, [1, 2]);
+    assert_eq!(right, [3, 4, 5, 6]);
+
+
+    let (left, right) = v.split_at(6);
+    assert_eq!(left, [1, 2, 3, 4, 5, 6]);
+    assert_eq!(right, []);
+}
+```
+
+## split_at_mut_unchecked
+
+split_at_unchecked 作用将一个可变切片划分成两个可变切片
+safe方式将split_at_mut_unchecked()替换为split_at_mut()
+
+**待补充：**需要极高性能且确认传递的分割位置是合法的时候，才应该使用 split_at_mut_unchecked()
+
+
+unsafe 1
+```
+#![allow(unused)]
+#![feature(slice_split_at_unchecked)]
+
+fn main() {
+    let mut v = [1, 0, 3, 0, 5, 6];
+// scoped to restrict the lifetime of the borrows
+    unsafe {
+        let (left, right) = v.split_at_mut_unchecked(2);
+        assert_eq!(left, [1, 0]);
+        assert_eq!(right, [3, 0, 5, 6]);
+        left[1] = 2;
+        right[1] = 4;
+    }
+    assert_eq!(v, [1, 2, 3, 4, 5, 6]);
+}
+```
+safe 1
+```
+#![allow(unused)]
+#![feature(slice_split_at_unchecked)]
+
+fn main() {
+    let mut v = [1, 0, 3, 0, 5, 6];
+// scoped to restrict the lifetime of the borrows
+
+    let (left, right) = v.split_at_mut(2);
+    assert_eq!(left, [1, 0]);
+    assert_eq!(right, [3, 0, 5, 6]);
+    left[1] = 2;
+    right[1] = 4;
+
+    assert_eq!(v, [1, 2, 3, 4, 5, 6]);
+}
+```
+
+## swap_unchecked
+
+swap_unchecked用于交换两个指针所指向的内存位置的值,函数需要确保指针指向的内存地址有效，并且交换的数据类型是合法的
+
+safe方式将swap_unchecked(,) 替换为 swap(,) 来进行转换的
+
+**待补充：**在需要极高的性能时且已经确定了要交换的索引是有效的可以使用 swap_unchecked
+
+unsafe 1
+```
+#![allow(unused)]
+#![feature(slice_swap_unchecked)]
+
+fn main() {
+    let mut v = ["a", "b", "c", "d"];
+// SAFETY: we know that 1 and 3 are both indices of the slice
+    unsafe { v.swap_unchecked(1, 3) };
+    assert!(v == ["a", "d", "c", "b"]);
+}
+```
+safe 1
+```
+#![allow(unused)]
+#![feature(slice_swap_unchecked)]
+
+fn main() {
+    let mut v = ["a", "b", "c", "d"];
+// SAFETY: we know that 1 and 3 are both indices of the slice
+    v.swap(1, 3);
+    assert!(v == ["a", "d", "c", "b"]);
+}
+```
+## to_int_unchecked
+
+to_int_unchecked方法将浮点数转换为整数类型，转换过程中会进行截断
+
+safe方式使用as将浮点数转换为整数类型，转换过程中也会进行截断，编译器会在类型无法容纳时给出警告
+
+unsafe 1(unsafe 2与unsafe 1区别仅f64->f32)
+```
+#![allow(unused)]
+fn main() {
+    let value = 4.6_f64;
+    let rounded = unsafe { value.to_int_unchecked::<u16>() };
+    assert_eq!(rounded, 4);
+
+    let value = -128.9_f64;
+    let rounded = unsafe { value.to_int_unchecked::<i8>() };
+    assert_eq!(rounded, i8::MIN);
+}
+```
+safe 1
+```
+#![allow(unused)]
+fn main() {
+    let value = 4.6_f32;
+    let rounded = value as u16;
+    assert_eq!(rounded, 4);
+
+    let value = -128.9_f32;
+    let rounded = value as i8;
+    assert_eq!(rounded, i8::MIN);
+}
+```
+## unwrap_unchecked
+
+unwrap_unchecked作用是直接将包装的枚举类型的值转换为内部的值，如果 Option 的值是 None 则会导致 panic
+
+- unsafe1和unsafe2 分别针对Option ：Some(T) 和None 
+- unsafe3和unsafe4 分别针对Result ：Ok(T)和Err(E) 
+  - unsafe1234 本质上为同一类 修改方式为将unwrap_unchecked改为unwrap
+
+
+unsafe 1
+```
+#![allow(unused)]
+fn main() {
+let x = Some("air");
+assert_eq!(unsafe { x.unwrap_unchecked() }, "air");
+}
+```
+unsafe 2
+```
+#![allow(unused)]
+fn main() {
+let x: Option<&str> = None;
+assert_eq!(unsafe { x.unwrap_unchecked() }, "air"); // Undefined behavior!
+}
+```
+unsafe 3
+```
+#![allow(unused)]
+fn main() {
+let x: Result<u32, &str> = Ok(2);
+assert_eq!(unsafe { x.unwrap_unchecked() }, 2);
+}
+```
+unsafe 4
+```
+#![allow(unused)]
+fn main() {
+let x: Result<u32, &str> = Err("emergency failure");
+unsafe { x.unwrap_unchecked(); } // Undefined behavior!
+}
+```
+
+
+## unwrap_err_unchecked
+
+unwrap_err_unchecked 用于从 Result 类型的值中获取错误值，如果 Result 中的值是 Ok，此方法将会导致未定义的行为
+
+safe方式为使用 unwrap_err()替换unwrap_err_unchecked 
+
+
+unsafe 1
+```
+//调用 unwrap_err_unchecked()，但是 x 的值是 Ok(2)，所以调用是未定义的行为
+#![allow(unused)]
+fn main() {
+let x: Result<u32, &str> = Ok(2);
+unsafe { x.unwrap_err_unchecked() }; // Undefined behavior!
+}
+```
+unsafe 2
+```
+//调用unwrap_err_unchecked()，但是 x 的值是 Err("emergency failure")，所以调用会返回包含错误信息字符串的 Result
+#![allow(unused)]
+fn main() {
+let x: Result<u32, &str> = Err("emergency failure");
+assert_eq!(unsafe { x.unwrap_err_unchecked() }, "emergency failure");
+}
+```
+## write
+std::ptr::write 用于在指定地址写入一个值
+unsafe 1 和 unsafe 2 **目的和操作对象不同**
+unsafe 1 操作的是指向**变量** x 的可变指针 y
+unsafe 2 操作的是指向**数组** data 的可变指针 ptr
+
+unsafe 1
+```
+// 使用了指针写入和读取操作，而且没有对指针进行正确的生命周期管理和借用规则，存在悬空指针和多次释放等安全问题
+#![allow(unused)]
+fn main() {
+    let mut x = 0;
+    let y = &mut x as *mut i32;
+    let z = 12;
+
+    unsafe {
+        std::ptr::write(y, z);
+        assert_eq!(std::ptr::read(y), 12);
+    }
+
+}
+```
+safe 1
+```
+// 对变量直接修改
+#![allow(unused)]
+fn main() {
+    let mut x = 12;
+    let y = &mut x as *mut i32;
+
+}
+```
+补充 unsafe 2
+```
+fn main() {
+    let mut data = [0u8; 10];
+    // 指向数组 data 的可变指针 ptr
+    let mut ptr: *mut u8 = data.as_mut_ptr();
+
+    unsafe {
+    // 使用不安全的 add 方法将指针增加 5 个元素的偏移量，使其指向数组的第 6 个元素
+        ptr = ptr.add(5); 
+        //使用 std::ptr::write 方法向指针指向的内存位置写入值 42
+        std::ptr::write(ptr, 42); 
+    }
+
+    assert_eq!(data, [0, 0, 0, 0, 0, 42, 0, 0, 0, 0]);
+}
+
+```
+对应 safe 2
+```
+fn main() {
+    let mut data = [0u8; 10];
+    let mut index = 5;
+
+    data[index] = 42;
+
+    assert_eq!(data, [0, 0, 0, 0, 0, 42, 0, 0, 0, 0]);
+}
+
+```
+
+## raw_pointer_deref
+
+ （被舍弃的分类方式）不可变裸指针 \*const T｜｜可变裸指针 \*mut T||函数指针 fn(T) -> U
+
+- 1 2 3 13 对**数组**使用裸指针进行迭代访问；4 12 指针指向的地址是一个**常量**（修改方式一致）
+- 5 6  **数组** 使用裸指针修改**可变**数据
+- 7 8 **UnsafeCell** 使用了 UnsafeCell 类型来创建一个内部可变的变量，并对其进行了修改（UnsafeCell 可以使得数据在编译期看起来是不可变的，但是实际上可以在运行时进行修改）
+- 9 **NonNull** 使用了 NonNull 类型来创建一个非空的裸指针，并对其进行了解引用和值的修改操作
+- 10 11 **Rc** 使用了 Rc 类型来创建一个共享所有权的智能指针，并对其进行了解引用操作
+ 
+ 
+*1 2 3 13 对数组使用裸指针进行迭代访问
+safe方式为use std::rc::Rc 智能指针类型迭代数组 使用了 Rc::new 创建智能指针，并且通过 Deref trait 实现对智能指针内容的访问
+Rc 是共享所有权的，因此可以在循环中多次使用，而不需要使用裸指针进行指针操作*
+ 
+unsafe 1
+```
+fn main() {
+    let data = [1u8, 2, 3, 4, 5];
+    let mut ptr: *const u8 = data.as_ptr();
+    let step = 2;
+    let end_rounded_up = ptr.wrapping_offset(6);
+    while ptr != end_rounded_up {
+        unsafe {
+            print!("{}, ", *ptr);
+        }
+        ptr = ptr.wrapping_offset(step);
+    }
+}
+```
+unsafe 2
+```
+fn main() {
+    let data = [1u8, 2, 3, 4, 5];
+    let mut ptr: *const u8 = data.as_ptr();
+    let step = 2;
+    let end_rounded_up = ptr.wrapping_add(6);
+    while ptr != end_rounded_up {
+        unsafe {
+            print!("{}, ", *ptr);
+        }
+        ptr = ptr.wrapping_add(step);
+    }
+}
+```
+unsafe 3
+```
+fn main() {
+    let data = [1u8, 2, 3, 4, 5];
+    let mut ptr: *const u8 = data.as_ptr();
+    let start_rounded_down = ptr.wrapping_sub(2);
+    ptr = ptr.wrapping_add(4);
+    let step = 2;
+    while ptr != start_rounded_down {
+        unsafe {
+            print!("{}, ", *ptr);
+        }
+        ptr = ptr.wrapping_sub(step);
+    }
+}
+```
+unsafe 13
+```
+fn main() {
+    let data = [1u8, 2, 3, 4, 5];
+    let mut ptr: *const u8 = data.as_ptr();
+    let step = 2;
+    let end_rounded_up = ptr.wrapping_offset(6);
+    while ptr != end_rounded_up {
+        unsafe {
+            print!("{}, ", *ptr);
+        }
+        ptr = ptr.wrapping_offset(step);
+    }
+}
+```
+unsafe 4
+```
+// 使用一个裸指针创建了一个指向常量 10u8 的指针，然后使用 &* 操作符进行解引用，得到了指向常量的引用，输出该引用指向的值
+fn main() {
+    let ptr: *const u8 = &10u8 as *const u8;
+    unsafe {
+        let val_back = &*ptr;
+        println!("We got back the value: {}!", val_back);
+    }
+}
+```
+unsafe 12
+```
+// 使用 Rc 包装一个指向常量 10u8 的指针，然后使用 deref() 方法得到了该指针的引用，输出该引用指向的值。
+fn main() {
+    let ptr: *const u8 = &20u8 as *const u8;
+    unsafe {
+        let val_back = &*ptr;
+        println!(val_back);
+    }
+}
+```
+*5 6 数组使用裸指针修改数据
+safe方式直接对数组进行操作*
+
+unsafe 5
+```
+fn main() {
+    let mut data = [1u8, 2, 3, 4, 5];
+    let mut ptr: *mut u8 = data.as_mut_ptr();
+    let step = 2;
+    let end_rounded_up = ptr.wrapping_offset(6);
+    while ptr != end_rounded_up {
+        unsafe {
+            *ptr = 0;
+        }
+        ptr = ptr.wrapping_offset(step);
+    }
+    assert_eq!(&data, &[0, 2, 0, 4, 0]);
+} 
+```
+unsafe 6
+```
+fn main() {
+    let mut s = [1, 2, 3];
+    let ptr: *mut u32 = s.as_mut_ptr();
+    let first_value = unsafe { &mut *ptr };
+    *first_value = 4;
+    assert_eq!(s, [4, 2, 3]);
+    println!("{:?}", s); 
+}
+```
+
+*7 8 UnsafeCell 使用了 UnsafeCell 类型来创建一个内部可变的变量，并对其进行了修改
+safe方式为将 UnsafeCell 中的 get() 方法替换为 get_mut() 方法*
+
+unsafe 7
+```
+// 使用 UnsafeCell 和 get() 方法来获取一个可变的指针，然后使用 * 运算符来访问和修改它所指向的值。同时在unsafe块内使用 &mut 来获取一个可变的指针引用，输出时用 get_mut() 方法来获取 UnsafeCell 中存储的值
+#![allow(unused)]
+fn main() {
+    use std::cell::UnsafeCell;
+    let mut x: UnsafeCell<i32> = UnsafeCell::new(5);
+    unsafe 
+        let p1_exclusive: &mut i32 = &mut *x.get(); 
+        *p1_exclusive += 27; 
+    } 
+    println!("{:?}", x.get_mut());
+}
+```
+unsafe 8
+```
+#![allow(unused)]
+fn main() {
+    use std::cell::UnsafeCell;
+    let mut x: UnsafeCell<i32> = 5.into();
+    unsafe {
+        let p1_exclusive: &mut i32 = &mut *x.get(); 
+        *p1_exclusive += 27; 
+    } 
+    println!("{:?}", x.get_mut());
+}
+```
+
+*9 NonNull 使用了 NonNull 类型来创建一个非空的裸指针，并对其进行了解引用和值的修改操作
+safe方式为不需要使用NonNull和unsafe代码来访问和修改指针，直接对变量进行复制和运算*
+unsafe 9
+```
+fn main() {
+    use std::ptr::NonNull;
+    let mut x = 0u32;
+    let ptr = NonNull::new(&mut x).expect("ptr is null!");
+    let x_value = unsafe { *ptr.as_ptr() };
+    assert_eq!(x_value, 0);
+    unsafe { *ptr.as_ptr() += 2; }
+    let x_value = unsafe { *ptr.as_ptr() };
+    assert_eq!(x_value, 2);
+}
+```
+
+*10 11 Rc 使用了 Rc 类型来创建一个共享所有权的智能指针，并对其进行了解引用操作
+safe方式为直接通过Rc实例的deref()方法来获取其内部的值，不再使用Rc::into_raw()函数将Rc实例x转换为裸指针，进而解引用操作*
+
+unsafe 10
+```
+fn main() {
+    use std::rc::Rc;
+    let x = Rc::new("hello".to_owned());
+    let x_ptr = Rc::into_raw(x);
+    assert_eq!(unsafe { &*x_ptr }, "hello");
+}
+```
+unsafe 11
+```
+fn main() {
+    use std::rc::Rc;
+    let x = Rc::new("hello".to_owned());
+    let y = Rc::clone(&x);
+    let x_ptr = Rc::as_ptr(&x);
+    assert_eq!(x_ptr, Rc::as_ptr(&y));
+    assert_eq!(unsafe { &*x_ptr }, "hello");
+}
+```
+——————————————————————————————————————————————————————————————————————————
+
+API余7：unchecked_add;unchecked_mul;offset;offset_from;pointer_add;pointer_sub;pointer_as_mut
+##### unchecked_add
+##### unchecked_mul
+##### offset
+用于获取指针在偏移量处的新地址
+##### offset_from 
+用于计算两个指针之间偏移量
+##### pointer_add
+用于计算指针加上某个偏移量后的新指针
+##### pointer_sub
+用于计算两个指针之间的偏移量
+*pointer_sub 的参数顺序是 (p, q)，而 offset_from 的参数顺序是 (q, p)。这是因为 pointer_sub 返回的距离是从第二个指针到第一个指针的距离，而 offset_from 返回的距离是从第一个指针到第二个指针的距离*
+##### pointer_as_mut
+用于将一个指向不可变类型的指针转换为指向可变类型的指针
