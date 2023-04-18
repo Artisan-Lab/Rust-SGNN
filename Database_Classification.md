@@ -1,36 +1,51 @@
 # 保留字
 
 **操作符：**<br>
-&<br>
-[]<br>
-<><br>
+\*（char: '\*'）<br>
+&  （char: '&'）（and_token: And,）<br>
+[]（ Group {）（Array( ）<br>
+<>（lt_token: Lt, gt_token: Gt,）<br>
 ::<br>
+..  (char: '.'  char: '.')<br>
 **类型和容器：**<br>
 Box<br>
 MaybeUninit<br>
 Arc<br>
 Vec<br>
 slice<br>
+vec！<br>
 String<br>
 struct<br>
 Unsafecell<br>
+Option<br>
+Result<br>
+Some<br>
+NonZero..<br>
+NonNull<br>
+mut<br>
+const<br>
 **函数和方法：**<br>
+add<br>
 alloc<br>
 array_assume_init<br>
 as_bytes_mut<br>
 as_chunks_unchecked 、 as_chunks_unchecked_mut<br>
-as_mut_ptr<br>
+as_ptr、as_mut_ptr<br>
 as_ref 、as_uninit_ref<br>
 assume_init<br>
+as_mut<br>
+clone<br>
 dealloc 、 deallocate<br>
 drop 和 drop_in_place<br>
 downcast_unchecked<br>
+expect<br>
 forget<br>
 free<br>
 from_le_bytes<br>
 from_raw 、 from_raw_in<br>
 from_raw_parts 、 from_raw_parts_mut<br>
 get、get_mut_unchecked、get_unchecked 、 get_unchecked_mut<br>
+into<br>
 into_raw 、 into_raw_with_allocator<br>
 len<br>
 libc<br>
@@ -40,15 +55,35 @@ new_uninit<br>
 new_uninit_slice<br>
 new、new_in<br>
 new_zeroed、new_zeroed_slice<br>
+offset<br>
+offset_from<br>
 set_len<br>
+swap_unchecked<br>
+split_at_unchecked<br>
+split_at_mut_unchecked<br>
+slice_unchecked<br>
+sub<br>
+transmute<br>
+to_int_unchecked<br>
+to_owned<br>
 uninit<br>
 uninit_array<br>
+unwrap_unchecked<br>
+unwrap_err_unchecked<br>
+unwrap<br>
+unchecked_mul<br>
+unchecked_add<br>
+wrapping_offset<br>
+wrapping_add<br>
+wrapping_sub<br>
 write<br>
+zeroed<br>
 **其他**<br>
-mut<br>
+mem<br>
 key<br>
 ptr<br>
 self<br>
+str<br>
 
 
 ## array_assume_init(2)(1)
@@ -2479,7 +2514,6 @@ fn main() {
 }
 ```
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 ## set_len
 - unsafe1 set_len将一个二维向量的长度设置为0
   - safe方式使用 Vec::clear() 方法来安全地清空向量
@@ -3308,19 +3342,584 @@ fn main() {
     assert_eq!(unsafe { &*x_ptr }, "hello");
 }
 ```
-——————————————————————————————————————————————————————————————————————————
+—————————————————————————————————————————————————————————————————————
 
-API余7：unchecked_add;unchecked_mul;offset;offset_from;pointer_add;pointer_sub;pointer_as_mut
-##### unchecked_add
-##### unchecked_mul
-##### offset
+
+<font color=‘red’>unchecked_add;unchecked_mul;offset;offset_from;pointer_add;pointer_sub;pointer_as_mut </font>
+
+API余7
+## unchecked_add
+
+unsafe 1～unsafe 6 都使用了 NonZero 类型： NonZeroU8、NonZeroU16、NonZeroU32、NonZeroU64、NonZeroU128、NonZeroUsize
+
+safe方式为将 unchecked_add 替换为 checked_add ，然后将返回值替换为Option 类型（如果加法操作不导致整数溢出会返回一个包含结果的 Some、否则会返回 None ）
+
+unsafe 1
+```
+#![allow(unused)]
+#![feature(nonzero_ops)]
+use std::num::NonZeroU16;
+
+fn main() -> (){
+
+    let one = NonZeroU16::new(1).unwrap();
+    let two = NonZeroU16::new(2).unwrap();
+    /* 
+    unsafe 2
+    let one = NonZeroUsize::new(1).unwrap();
+    let two = NonZeroUsize::new(2).unwrap();
+    */
+    /* 
+    unsafe 3
+    let one = NonZeroU32::new(1).unwrap();
+    let two = NonZeroU32::new(2).unwrap();
+    */
+    /* 
+    unsafe 4
+    let one = NonZeroU128::new(1).unwrap();
+    let two = NonZeroU128::new(2).unwrap();
+    */
+    /* 
+    unsafe 5
+    let one = NonZeroU64::new(1).unwrap();
+    let two = NonZeroU64::new(2).unwrap();
+    */
+    /* 
+    unsafe 6
+    let one = NonZeroU8::new(1).unwrap();
+    let two = NonZeroU8::new(2).unwrap();
+    */
+    
+    assert_eq!(two, unsafe { one.unchecked_add(1) });
+
+
+}
+
+```
+safe 1～6
+```
+#![allow(unused)]
+#![feature(nonzero_ops)]
+use std::num::NonZeroU16;
+
+fn main() -> (){
+
+    let one = NonZeroU16::new(1).unwrap();
+    let two = NonZeroU16::new(2).unwrap();
+
+    assert_eq!(Some(two), one.checked_add(1));
+
+
+}
+```
+
+
+## unchecked_mul
+
+unsafe 1～unsafe 12 都使用了 NonZero 类型： NonZeroI8、NonZeroI16、NonZeroI32、NonZeroI64、NonZeroI128、NonZeroIsize、NonZeroU8、NonZeroU16、NonZeroU32、NonZeroU64、NonZeroU128、NonZeroUsize
+
+safe方式为使用 checked_mul 代替 unchecked_mul，返回一个 Option<NonZero···> 类型，操作数非零值返回 Some 包含结果的值、否则返回 None
+
+unsafe 1
+```
+#![allow(unused)]
+#![feature(nonzero_ops)]
+
+use std::num::NonZeroI128;
+
+fn main() -> () {
+    let two = NonZeroI128::new(2).unwrap();
+    let four = NonZeroI128::new(4).unwrap();
+
+    assert_eq!(four, unsafe { two.unchecked_mul(two) });
+}
+
+```
+safe 1
+```
+#![allow(unused)]
+#![feature(nonzero_ops)]
+
+use std::num::NonZeroI128;
+
+fn main() -> () {
+    let two = NonZeroI128::new(2).unwrap();
+    let four = NonZeroI128::new(4).unwrap();
+    assert_eq!(Some(four), two.checked_mul(two));
+}
+
+```
+
+## offset
 用于获取指针在偏移量处的新地址
-##### offset_from 
-用于计算两个指针之间偏移量
-##### pointer_add
+
+按照修改方式14，23可分为两类
+
+unsafe 1与unsafe 4
+
+- unsafe 1: 指向**字符串**的**不可变指针**，然后使用offset直接访问内存中的字符串字符
+  - safe 1: 将字符串转换Rc，然后使用deref和chars访问字符串的字符
+- unsafe 4: 指向**数组**的**可变指针**，然后使用offset直接访问内存中的整数元素
+  - safe 4: 将整数数组转换为Rc，然后使用deref和数组索引访问整数元素
+unsafe 2与unsafe 3
+- unsafe 2: 指向**数组**的**可变指针**，使用offset方法来计算它们之间的偏移量
+  - safe 2: 使用了wrapping_offset确保它们之间的偏移量不会超出数组的边界
+- unsafe 3: 指向**数组**的**不可变指针**，使用offset方法来计算它们之间的偏移量
+  - safe 3：使用wrapping_offset确保它们之间的偏移量不会超出数组的边界。
+
+
+unsafe 1
+```
+#![allow(unused)]
+fn main() {
+    let s: &str = "123";
+    let ptr: *const u8 = s.as_ptr();
+
+    unsafe {
+        println!("{}", *ptr.offset(1) as char);
+        println!("{}", *ptr.offset(2) as char);
+    }
+}
+```
+safe 1
+```
+#![allow(unused)]
+use std::rc::Rc;
+use std::ops::Deref;
+fn main() {
+    let s: &str = "123";
+
+    let ptr2 = Rc::new(s);
+
+    println!("{}",ptr2.deref().chars().nth(1).unwrap());
+    println!("{}",ptr2.deref().chars().nth(2).unwrap());
+}
+```
+unsafe 4
+```
+#![allow(unused)]
+fn main() {
+    let mut s = [1, 2, 3];
+    let ptr: *mut u32 = s.as_mut_ptr();
+
+    unsafe {
+        println!("{}", *ptr.offset(1));
+        println!("{}", *ptr.offset(2));
+    }
+}
+```
+safe 4
+```
+#![allow(unused)]
+use std::rc::Rc;
+use std::ops::Deref;
+fn main() {
+    let mut s = [1, 2, 3];
+
+    let ptr2 = Rc::new(s);
+
+    println!("{}",ptr2.deref()[1]);
+    println!("{}",ptr2.deref()[2]);
+}
+```
+unsafe 2
+```
+#![allow(unused)]
+fn main() {
+    let mut a = [0; 5];
+    let ptr1: *mut i32 = &mut a[1];
+    let ptr2: *mut i32 = &mut a[3];
+    unsafe {
+        assert_eq!(ptr1.offset(2), ptr2);
+        assert_eq!(ptr2.offset(-2), ptr1);
+    }
+}
+```
+safe 2
+```
+#![allow(unused)]
+use std::rc::Rc;
+use std::ops::Deref;
+use core::mem::size_of;
+fn main() {
+    let mut a = [0; 5];
+    let ptr1: *mut i32 = &mut a[1];
+    let ptr2: *mut i32 = &mut a[3];
+
+    assert_eq!(ptr1.wrapping_offset(2), ptr2);
+    assert_eq!(ptr2.wrapping_offset(-2), ptr1);
+
+
+}
+```
+unsafe 3
+```
+#![allow(unused)]
+fn main() {
+    let a = [0; 5];
+    let ptr1: *const i32 = &a[1];
+    let ptr2: *const i32 = &a[3];
+    unsafe {
+
+        assert_eq!(ptr1.offset(2), ptr2);
+        assert_eq!(ptr2.offset(-2), ptr1);
+    }
+}
+```
+safe 3
+```
+#![allow(unused)]
+use std::rc::Rc;
+use std::ops::Deref;
+use core::mem::size_of;
+fn main() {
+    let a = [0; 5];
+
+    let ptr1: *const i32 = &a[1];
+    let ptr2: *const i32 = &a[3];
+
+    assert_eq!(ptr1.wrapping_offset(2), ptr2);
+    assert_eq!(ptr2.wrapping_offset(-2), ptr1);
+
+
+}
+```
+## offset_from 
+用于计算两个指针之间偏移量（unsafe因为它假设这两个指针来自同一块内存，并且第一个指针在第二个指针之前）
+
+unsafe 1 2 3 4 
+safe 方式使用 wrapping_sub 方法计算指针的偏移量，并且使用相除的方式来获取偏移量
+
+
+unsafe 1
+```
+#![allow(unused)]
+fn main() {
+    let a = [0; 5];
+    let ptr1: *const i32 = &a[1];
+    let ptr2: *const i32 = &a[3];
+    unsafe {
+        assert_eq!(ptr2.offset_from(ptr1), 2);
+        assert_eq!(ptr1.offset_from(ptr2), -2);
+    }
+}
+```
+safe 1
+```
+#![allow(unused)]
+use std::rc::Rc;
+use std::ops::Deref;
+use core::mem::size_of;
+fn main() {
+    let a = [0; 5];
+    // 将指针强制转换为 isize 类型，使用 wrapping_sub 
+    // isize 类型是有符号的，可以避免溢出错误
+    let ptr1: *const i32 = &a[1];
+    let ptr2: *const i32 = &a[3];
+    let diff1:isize = (ptr2 as isize).wrapping_sub(ptr1 as isize);
+    let diff2:isize = (ptr1 as isize).wrapping_sub(ptr2 as isize);
+    let size_of_i32 = size_of::<i32>() as isize;
+    // 除以 i32 的大小来得到指针之间的距离
+    assert_eq!(diff1/size_of_i32, 2);
+    assert_eq!(diff2/size_of_i32, -2);
+
+
+}
+```
+unsafe 3
+```
+#![allow(unused)]
+fn main() {
+    let mut a = [0; 5];
+    let ptr1: *mut i32 = &mut a[1];
+    let ptr2: *mut i32 = &mut a[3];
+    unsafe {
+        assert_eq!(ptr2.offset_from(ptr1), 2);
+        assert_eq!(ptr1.offset_from(ptr2), -2);
+    }
+}
+```
+safe 3
+```
+#![allow(unused)]
+use std::rc::Rc;
+use std::ops::Deref;
+use core::mem::size_of;
+fn main() {
+    let mut a = [0; 5];
+    let ptr1: *mut i32 = &mut a[1];
+    let ptr2: *mut i32 = &mut a[3];
+    let diff1:isize = (ptr2 as isize).wrapping_sub(ptr1 as isize);
+    let diff2:isize = (ptr1 as isize).wrapping_sub(ptr2 as isize);
+    let size_of_i32 = size_of::<i32>() as isize;
+    assert_eq!(diff1/size_of_i32, 2);
+    assert_eq!(diff2/size_of_i32, -2);
+
+
+}
+```
+unsafe 2
+```
+#![allow(unused)]
+fn main() {
+    let ptr1 = Box::into_raw(Box::new(0u8)) as *const u8;
+    let ptr2 = Box::into_raw(Box::new(1u8)) as *const u8;
+    let diff = (ptr2 as isize).wrapping_sub(ptr1 as isize);
+// Make ptr2_other an "alias" of ptr2, but derived from ptr1.
+    let ptr2_other = (ptr1 as *const u8).wrapping_offset(diff);
+    assert_eq!(ptr2 as usize, ptr2_other as usize);
+// Since ptr2_other and ptr2 are derived from pointers to different objects,
+// computing their offset is undefined behavior, even though
+// they point to the same address!
+    unsafe {
+        let zero = ptr2_other.offset_from(ptr2); // Undefined Behavior
+        println!("{:?}",ptr2_other.offset_from(ptr2));
+    }
+}
+```
+safe 2
+```
+#![allow(unused)]
+fn main() {
+    let ptr1 = Box::into_raw(Box::new(0u8)) as *const u8;
+    let ptr2 = Box::into_raw(Box::new(1u8)) as *const u8;
+    let diff = (ptr2 as isize).wrapping_sub(ptr1 as isize);
+// Make ptr2_other an "alias" of ptr2, but derived from ptr1.
+    let ptr2_other = (ptr1 as *const u8).wrapping_offset(diff);
+    assert_eq!(ptr2 as usize, ptr2_other as usize);
+// Since ptr2_other and ptr2 are derived from pointers to different objects,
+// computing their offset is undefined behavior, even though
+// they point to the same address!
+
+    let zero = (ptr2_other as isize).wrapping_sub(ptr2 as isize);
+    println!("{:?}",zero);
+}
+```
+unsafe 4
+```
+#![allow(unused)]
+fn main() {
+    let ptr1 = Box::into_raw(Box::new(0u8));
+    let ptr2 = Box::into_raw(Box::new(1u8));
+    let diff = (ptr2 as isize).wrapping_sub(ptr1 as isize);
+// Make ptr2_other an "alias" of ptr2, but derived from ptr1.
+    let ptr2_other = (ptr1 as *mut u8).wrapping_offset(diff);
+    assert_eq!(ptr2 as usize, ptr2_other as usize);
+// Since ptr2_other and ptr2 are derived from pointers to different objects,
+// computing their offset is undefined behavior, even though
+// they point to the same address!
+    unsafe {
+        let zero = ptr2_other.offset_from(ptr2); // Undefined Behavior
+        println!("{:?}",zero);
+    }
+}
+```
+safe 4
+```
+#![allow(unused)]
+fn main() {
+    let ptr1 = Box::into_raw(Box::new(0u8));
+    let ptr2 = Box::into_raw(Box::new(1u8));
+    let diff = (ptr2 as isize).wrapping_sub(ptr1 as isize);
+// Make ptr2_other an "alias" of ptr2, but derived from ptr1.
+    let ptr2_other = (ptr1 as *const u8).wrapping_offset(diff);
+    assert_eq!(ptr2 as usize, ptr2_other as usize);
+// Since ptr2_other and ptr2 are derived from pointers to different objects,
+// computing their offset is undefined behavior, even though
+// they point to the same address!
+
+    let zero = (ptr2_other as isize).wrapping_sub(ptr2 as isize);
+    println!("{:?}",zero);
+}
+```
+## pointer_add
 用于计算指针加上某个偏移量后的新指针
-##### pointer_sub
-用于计算两个指针之间的偏移量
-*pointer_sub 的参数顺序是 (p, q)，而 offset_from 的参数顺序是 (q, p)。这是因为 pointer_sub 返回的距离是从第二个指针到第一个指针的距离，而 offset_from 返回的距离是从第一个指针到第二个指针的距离*
-##### pointer_as_mut
+
+- unsafe 1 使用指针问**字符串**的字符
+  - safe 使用 Rc然后deref() 并使用 chars().nth(i) 来访问第i个字符。
+- unsafe 2 使用指针访问和修改**可变的数组**,使用pointer_add()，依次访问和修改所有元素
+- unsafe 3 使用指针访问**不可变的数组**，使用pointer_add()和 get_unchecked() 来访问所有元素
+  - 2 3的safe方式一致 为将不安全指针操作改为常规的数组访问方式
+
+unsafe 1
+```
+#![allow(unused)]
+fn main() {
+    let s: &str = "123";
+    let ptr: *const u8 = s.as_ptr();
+
+    unsafe {
+        println!("{}", *ptr.add(1) as char);
+        println!("{}", *ptr.add(2) as char);
+    }
+}
+```
+safe 1
+```
+#![allow(unused)]
+use std::rc::Rc;
+use std::ops::Deref;
+fn main() {
+    let s: &str = "123";
+    let mut i = 1;
+    let ptr2 = Rc::new(s);
+
+    println!("{}",ptr2.deref().chars().nth(i).unwrap());
+    i+=1;
+    println!("{}",ptr2.deref().chars().nth(i).unwrap());
+    i+=1;
+}
+```
+unsafe 2
+```
+#![allow(unused)]
+fn main() {
+    let x = &mut [1, 2, 4];
+    let x_ptr = x.as_mut_ptr();
+
+    unsafe {
+        for i in 0..x.len() {
+            *x_ptr.add(i) += 2;
+        }
+    }
+    assert_eq!(x, &[3, 4, 6]);
+}
+```
+safe 2
+```
+#![allow(unused)]
+
+fn main() {
+    let x = &mut [1, 2, 4];
+    for i in 0..x.len() {
+        x[i] += 2;
+    }
+    assert_eq!(x, &[3, 4, 6]);
+}
+```
+unsafe 3
+```
+#![allow(unused)]
+fn main() {
+    let x = &[1, 2, 4];
+    let x_ptr = x.as_ptr();
+    // x.as_ptr() 方法返回了一个指向数组首个元素的指针
+
+    unsafe {
+        for i in 0..x.len() {
+            assert_eq!(x.get_unchecked(i), &*x_ptr.add(i));
+        }
+    }
+}
+```
+safe 3
+```
+#![allow(unused)]
+
+fn main() {
+    let x = &[1, 2, 4];
+
+    for i in 0..x.len() {
+    // x 的第 i 个元素与 解引用 x 指针后所得到的数组的第 i 个元素
+        assert_eq!(x[i], (*x)[i]);
+    }
+}
+```
+## pointer_sub
+ptr.sub(i)来获得一个指向前i个元素的新指针
+
+- 与pointer_add unsafe 1 修改方式一致
+  - safe方式为使用Rc引用计数类型和deref方法来访问字符串（将字符串s封装到一个引用计数类型的Rc对象中，使用deref()获得字符串的引用，接着使用chars()将字符串转换成字符迭代器，最后使用nth()来访问字符）
+
+unsafe 1
+```
+#![allow(unused)]
+fn main() {
+    let s: &str = "123";
+
+    unsafe {
+        let end: *const u8 = s.as_ptr().add(3);
+        println!("{}", *end.sub(1) as char);
+        println!("{}", *end.sub(2) as char);
+    }
+}
+```
+safe 1
+```
+#![allow(unused)]
+use std::rc::Rc;
+use std::ops::Deref;
+fn main() {
+    let s: &str = "123";
+    let ptr = Rc::new(s);
+    let mut i = 3;
+    i-=1;
+    println!("{}", ptr.deref().chars().nth(i).unwrap());
+    i-=1;
+    println!("{}", ptr.deref().chars().nth(i).unwrap());
+
+}
+```
+
+## pointer_as_mut
 用于将一个指向不可变类型的指针转换为指向可变类型的指针
+
+不同类型的指针
+- unsafe 1针对**数组**
+  - safe方式不再使用指针而是直接通过索引访问和修改数组元素
+- unsafe 2针对**变量**
+  - safe方式不再使用指针而是直接使用可变变量x修改它的值
+
+unsafe 1
+```
+#![allow(unused)]
+fn main() {
+    let mut s = [1, 2, 3];
+    let ptr: *mut u32 = s.as_mut_ptr();
+    let first_value = unsafe { ptr.as_mut().unwrap() };
+    *first_value = 4;
+    assert_eq!(s, [4, 2, 3]);
+    println!("{:?}", s); // It'll print: "[4, 2, 3]".
+}
+```
+safe 1
+```
+#![allow(unused)]
+fn main() {
+    let mut s = [1, 2, 3];
+    s[0]=4;
+    assert_eq!(s, [4, 2, 3]);
+    println!("{:?}", s); // It'll print: "[4, 2, 3]".
+}
+```
+unsafe 2
+```
+#![allow(unused)]
+fn main() {
+    use std::ptr::NonNull;
+
+    let mut x = 0u32;
+    let mut ptr = NonNull::new(&mut x).expect("null pointer");
+
+    let x_ref = unsafe { ptr.as_mut() };
+    assert_eq!(*x_ref, 0);
+    *x_ref += 2;
+    assert_eq!(*x_ref, 2);
+}
+```
+safe 2
+```
+#![allow(unused)]
+
+fn main() {
+    use std::ptr::NonNull;
+
+    let mut x = 0u32;
+
+    assert_eq!(x, 0);
+
+    x += 2;
+    assert_eq!(x, 2);
+}
+```
+
