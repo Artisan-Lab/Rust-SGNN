@@ -1,3 +1,10 @@
+/*
+    This is a simply modified case from std. The type of x in the original code is slice.
+    Link: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.get_unchecked 
+    Purpose: change the value of each Vec item
+    Replaceable? Yes
+*/
+
 #![allow(unused)]
 fn main() {
     let x = vec![1, 2, 4];
