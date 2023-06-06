@@ -1,7 +1,7 @@
 /*
     This is a case from std
     Link: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts 
-    Category:
+    Purpose: create a vec from a memory with a specific capacity 
     Replaceable? Yes
 */
 #![allow(unused)]
