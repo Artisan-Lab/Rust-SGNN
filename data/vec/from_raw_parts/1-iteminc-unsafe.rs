@@ -1,4 +1,10 @@
-//this case is from std: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.into_raw_parts
+/*
+    This is a case from std
+    Link: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts 
+    Purpose: change the value of each Vec item
+    Replaceable? Yes
+*/
+
 #![allow(unused)]
 
 use std::ptr;
