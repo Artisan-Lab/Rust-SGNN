@@ -9,7 +9,7 @@
 #![feature(get_many_mut)]
 
 fn main() {
-let mut v = vec![1, 2, 3, 4];
+    let mut v = vec![1, 2, 3, 4];
     let [a, b, d] = unsafe { v.get_many_unchecked_mut([0, 1, 3]) };
     *a = 10;
     *b = 100;
