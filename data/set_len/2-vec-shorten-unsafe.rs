@@ -2,7 +2,7 @@
     This is a case from std
     Link: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.set_len
     Purpose: shorten the length of a Vec while maintaining its capacity
-    Replaceable? No
+    Replaceable? Yes
 */
 #![allow(unused)]
 fn main() {
