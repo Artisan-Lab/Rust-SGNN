@@ -2,7 +2,7 @@
     This is a case from std
     Link: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.swap_unchecked
     Purpose: swap two items of an Vec
-    Replaceable? No
+    Replaceable? Yes
 */
 
 #![allow(unused)]
