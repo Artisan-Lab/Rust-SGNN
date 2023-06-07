@@ -1,4 +1,5 @@
 #![allow(unused)]
+#![feature(get_many_mut)]
 
 fn main() {
     let mut v = vec![1, 2, 3, 4];
