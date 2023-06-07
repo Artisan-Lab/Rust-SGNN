@@ -1,5 +1,5 @@
 /*
-    This is a case from std
+    This is a slightly modified case from std
     Link: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.get_many_unchecked_mut
     Purpose: Returns mutable references to many indices at once, without doing any checks.
     Replaceable? Yes
