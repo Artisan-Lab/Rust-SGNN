@@ -5,10 +5,13 @@
     Replaceable? Yes
 */
 
+#![allow(unused)]
+#![feature(get_many_mut)]
+
 fn main() {
-let mut v = vec![1, 2, 4];
-    let [a, b] = unsafe { v.get_many_unchecked_mut([0, 2]) };
-    *a *= 10;
-    *b *= 100;
-    assert_eq!(v, &[10, 2, 400]);
+let mut v = vec![1, 2, 3, 4];
+    let [a, b, d] = unsafe { v.get_many_unchecked_mut([0, 1, 3]) };
+    *a = 10;
+    *b = 100;
+    assert_eq!(v, &[10, 100, 3, 4]);
 }
