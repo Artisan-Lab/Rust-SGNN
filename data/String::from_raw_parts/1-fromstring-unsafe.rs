@@ -1,7 +1,7 @@
 /*
     This is a case from std
     Link: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts 
-    Purpose: rebuild a string, a naive case
+    Purpose: Creates a new String from a length, capacity, and pointer; a naive case
     Replaceable? Yes
 */
 
