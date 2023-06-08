@@ -17,7 +17,7 @@ fn foo(s1: &mut str) {
 }
 
 fn main() {
-    let mut s = String::from("hello");
+    let s = String::from("hello");
     let mut s = mem::ManuallyDrop::new(s);
     let s1 = s.as_mut_str();
     foo(s1);
