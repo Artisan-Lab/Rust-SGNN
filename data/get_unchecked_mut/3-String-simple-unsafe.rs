@@ -1,5 +1,5 @@
 /*
-    This is a case from std
+    This is a modified case from std
     Link: https://doc.rust-lang.org/std/string/struct.String.html#method.get_unchecked_mut
     Purpose: Returns an unchecked subslice of str.
     Replaceable? Yes
