@@ -1,6 +1,6 @@
 /*
     This is a modified case from std
-    Link: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts 
+    Link: https://doc.rust-lang.org/std/string/struct.String.html#method.from_raw_parts
     Purpose: Creates a new String from a length, capacity, and pointer; a naive case
     Replaceable? No; The original code is nonsense. We don't know the purpose of the code. We mark it as irreplaceable because converting any raw pointer to an owned object is unsafe.
 */
