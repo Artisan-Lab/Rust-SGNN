@@ -1,6 +1,6 @@
 /*
     This is a case from std
-    Link: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.from_raw_parts 
+    Link: https://doc.rust-lang.org/std/string/struct.String.html#method.from_raw_parts
     Purpose: convert a vec into a string
     Replaceable? Yes
 */
