@@ -12,7 +12,7 @@ use std::ptr;
 */
 fn foo(p:*mut u8, len:usize, cap:usize) {
     let s = unsafe { String::from_raw_parts(p, len, cap) }; 
-    assert_eq!(String::from("hello"), s);
+    //assert_eq!(String::from("hello"), s);
 }
 /*
 fn main() {
