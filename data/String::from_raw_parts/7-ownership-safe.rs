@@ -1,5 +1,4 @@
 #![allow(unused)]
-#![feature(vec_into_raw_parts)]
 use std::mem;
 
 fn USE<T>(x:T) { }
