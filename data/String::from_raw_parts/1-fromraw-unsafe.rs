@@ -5,15 +5,16 @@
     Replaceable? No; The original code is nonsense. We don't know the purpose of the code. We mark it as irreplaceable because converting any raw pointer to an owned object is unsafe.
 */
 
+/*
 #![allow(unused)]
 use std::mem;
 use std::ptr;
-
+*/
 fn foo(p:*mut u8, len:usize, cap:usize) {
     let s = unsafe { String::from_raw_parts(p, len, cap) }; 
     assert_eq!(String::from("hello"), s);
 }
-
+/*
 fn main() {
     let s = String::from("hello");
     let mut s = mem::ManuallyDrop::new(s);
@@ -23,3 +24,4 @@ fn main() {
     let cap = s.capacity();
    foo(p, len, cap);
 }
+*/
