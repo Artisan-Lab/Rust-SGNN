@@ -9,6 +9,6 @@
 #![feature(slice_as_chunks)]
 fn main() {
     let v = vec!['l', 'o', 'r', 'e', 'm', '!'];
-    let chunks: &[[char; 1]] = unsafe { v.as_chunks_unchecked() };
-    assert_eq!(chunks, &[['l'], ['o'], ['r'], ['e'], ['m'], ['!']]);
+    let chunks: &[[char; 3]] = unsafe { slice.as_chunks_unchecked() };
+    assert_eq!(chunks, &[['l', 'o', 'r'], ['e', 'm', '!']]);
 }
