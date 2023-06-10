@@ -7,10 +7,9 @@
 
 #![allow(unused)]
 #![feature(slice_as_chunks)]
+
 fn main() {
     let slice: &[char] = &['l', 'o', 'r', 'e', 'm', '!'];
-    let chunks: &[[char; 1]] = unsafe { slice.as_chunks_unchecked() };
-    assert_eq!(chunks, &[['l'], ['o'], ['r'], ['e'], ['m'], ['!']]);
     let chunks: &[[char; 3]] = unsafe { slice.as_chunks_unchecked() };
     assert_eq!(chunks, &[['l', 'o', 'r'], ['e', 'm', '!']]);
 }
