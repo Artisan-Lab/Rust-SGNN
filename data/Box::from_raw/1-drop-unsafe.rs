@@ -5,12 +5,12 @@
 */
 #![allow(unused)]
 
-fn foo(p:*mut i32) {
+fn drop(p:*mut i32) {
     unsafe { Box::from_raw(p); }
 }
 
 fn main() {
     let x = Box::new(5);
     let p = Box::into_raw(x);
-    foo(p);
+    drop(p);
 }
