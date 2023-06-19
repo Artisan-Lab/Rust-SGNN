@@ -1,6 +1,5 @@
 
 #![allow(unused)]
-fn main() {
 use std::alloc::{alloc, Layout};
 
 fn main() {
