@@ -6,8 +6,8 @@ use std::mem;
 struct Foo<T>{ v:T }
 impl<T> Foo<T> {
     pub fn getptr(x: &mut Box<Self>) -> *mut libc::c_void {
-        let ptr: *mut Self = x.as_mut();
-        unsafe { mem::transmute(ptr) }
+        let p: *mut Self = x.as_mut();
+        unsafe { mem::transmute(p) }
     }
 }
 
