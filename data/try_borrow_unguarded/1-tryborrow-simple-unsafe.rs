@@ -1,7 +1,7 @@
 #![allow(unused)]
-fn main() {
-    use std::cell::RefCell;
+use std::cell::RefCell;
 
+fn main() {
     let c = RefCell::new(5);
 
     {
