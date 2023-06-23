@@ -7,7 +7,7 @@
 
 #![allow(unused)]
 fn main() {
-    let v = "hello";
-    let a =  unsafe { v.get_unchecked(0..2) };
+    let str = "hello";
+    let a =  unsafe { str.get_unchecked(0..2) };
     assert_eq!(a, "he");
 }
